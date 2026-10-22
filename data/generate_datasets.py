@@ -1,0 +1,536 @@
+# -*- coding: utf-8 -*-
+"""
+Bộ tạo Cơ sở Dữ liệu Camera Phạt Nguội & Tốc độ Xe Máy Toàn Bản Đồ Việt Nam
+Dành riêng cho dự án Moto-Radar VN (Em yêu khoa học)
+Tuân thủ Thông tư 31/2019/TT-BGTVT & QCVN 41:2019/BGTVT
+"""
+
+import json
+import os
+
+CAMERAS = [
+    # ================= TP. HỒ CHÍ MINH =================
+    {
+        "id": "HCM-001",
+        "name": "Ngã tư Hàng Xanh (Điện Biên Phủ - Xô Viết Nghệ Tĩnh)",
+        "lat": 10.80164, "lng": 106.71158,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 45,
+        "address": "Bình Thạnh, TP.HCM",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Hàng Xanh"
+    },
+    {
+        "id": "HCM-002",
+        "name": "Đại lộ Võ Văn Kiệt - Giao An Dương Vương",
+        "lat": 10.72912, "lng": 106.62145,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 70,
+        "address": "Bình Tân / Q.6, TP.HCM",
+        "warning_text": "Camera bắn tốc độ xe máy Đại lộ Võ Văn Kiệt. Tốc độ tối đa 50 km/h"
+    },
+    {
+        "id": "HCM-003",
+        "name": "Đại lộ Võ Văn Kiệt - Cầu Chà Và (Q.5/Q.8)",
+        "lat": 10.74955, "lng": 106.65823,
+        "type": "LANE",
+        "speed_limit_moto": 50,
+        "bearing": 65,
+        "address": "Quận 5, TP.HCM",
+        "warning_text": "Camera phạt nguội lấn làn và tốc độ 50 km/h đường Võ Văn Kiệt"
+    },
+    {
+        "id": "HCM-004",
+        "name": "Đại lộ Võ Văn Kiệt - Cửa Hầm Thủ Thiêm (Q.1)",
+        "lat": 10.76812, "lng": 106.70485,
+        "type": "SPEED",
+        "speed_limit_moto": 40,
+        "bearing": 80,
+        "address": "Quận 1, TP.HCM",
+        "warning_text": "Camera bắn tốc độ cửa hầm Thủ Thiêm. Xe máy tối đa 40 km/h, chú ý bật đèn chiếu gần"
+    },
+    {
+        "id": "HCM-005",
+        "name": "Đại lộ Mai Chí Thọ - Giao Lương Định Của",
+        "lat": 10.78452, "lng": 106.74125,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 110,
+        "address": "TP. Thủ Đức, TP.HCM",
+        "warning_text": "Camera bắn tốc độ làn xe máy Mai Chí Thọ. Tối đa 50 km/h"
+    },
+    {
+        "id": "HCM-006",
+        "name": "Đường Phạm Văn Đồng - Giao Phan Văn Trị",
+        "lat": 10.82231, "lng": 106.68954,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 85,
+        "address": "Gò Vấp, TP.HCM",
+        "warning_text": "Camera bắn tốc độ làn xe máy Phạm Văn Đồng. Tốc độ tối đa 50 km/h"
+    },
+    {
+        "id": "HCM-007",
+        "name": "Đường Phạm Văn Đồng - Cầu Bình Lợi",
+        "lat": 10.82582, "lng": 106.71642,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 80,
+        "address": "Bình Thạnh / Thủ Đức, TP.HCM",
+        "warning_text": "Camera bắn tốc độ qua cầu Bình Lợi. Xe máy đi đúng làn và giữ tốc độ 50 km/h"
+    },
+    {
+        "id": "HCM-008",
+        "name": "Ngã tư Nguyễn Văn Linh - Nguyễn Hữu Thọ",
+        "lat": 10.73024, "lng": 106.70258,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 90,
+        "address": "Quận 7, TP.HCM",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ và dừng đè vạch ngã tư Nguyễn Văn Linh"
+    },
+    {
+        "id": "HCM-009",
+        "name": "Quốc lộ 1A - Cầu Bình Điền (Bình Chánh)",
+        "lat": 10.68652, "lng": 106.59124,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 210,
+        "address": "Bình Chánh, TP.HCM",
+        "warning_text": "Camera bắn tốc độ Quốc lộ 1A Bình Chánh. Tối đa 50 km/h"
+    },
+    {
+        "id": "HCM-010",
+        "name": "Quốc lộ 1A - Ngã tư Bình Phước (Thủ Đức)",
+        "lat": 10.85721, "lng": 106.71852,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 60,
+        "bearing": 45,
+        "address": "TP. Thủ Đức, TP.HCM",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ và sai làn ngã tư Bình Phước"
+    },
+    {
+        "id": "HCM-011",
+        "name": "Xa lộ Hà Nội - Ngã tư RMK / Tây Hòa",
+        "lat": 10.82145, "lng": 106.76214,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 50,
+        "address": "TP. Thủ Đức, TP.HCM",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Tây Hòa Xa Lộ Hà Nội"
+    },
+    {
+        "id": "HCM-012",
+        "name": "Xa lộ Hà Nội - Cổng khu Công nghệ cao / Suối Tiên",
+        "lat": 10.86452, "lng": 106.80215,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 55,
+        "address": "TP. Thủ Đức, TP.HCM",
+        "warning_text": "Camera bắn tốc độ Xa Lộ Hà Nội gần Suối Tiên. Xe máy tối đa 60 km/h"
+    },
+    {
+        "id": "HCM-013",
+        "name": "Ngã tư Hoàng Văn Thụ - Nguyễn Văn Trỗi",
+        "lat": 10.79854, "lng": 106.66985,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 330,
+        "address": "Tân Bình / Phú Nhuận, TP.HCM",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ cửa ngõ sân bay Tân Sơn Nhất"
+    },
+    {
+        "id": "HCM-014",
+        "name": "Trục Trường Chinh - Giao Tây Thạnh (Mũi Tàu)",
+        "lat": 10.81452, "lng": 106.63412,
+        "type": "LANE",
+        "speed_limit_moto": 50,
+        "bearing": 315,
+        "address": "Tân Bình / Tân Phú, TP.HCM",
+        "warning_text": "Camera phạt nguội lấn làn và vượt đèn đỏ Trường Chinh"
+    },
+    {
+        "id": "HCM-EXPRESS-01",
+        "name": "Nút giao An Phú - Đầu đường dẫn Cao tốc Long Thành",
+        "lat": 10.79321, "lng": 106.75841,
+        "type": "EXPRESSWAY_BAN",
+        "speed_limit_moto": 0,
+        "bearing": 95,
+        "address": "TP. Thủ Đức, TP.HCM",
+        "warning_text": "CẢNH BÁO NGUY HIỂM: Phía trước là đường cao tốc Long Thành - CẤM XE MÁY!"
+    },
+    {
+        "id": "HCM-EXPRESS-02",
+        "name": "Nút giao Tân Tạo - Đầu đường dẫn Cao tốc Trung Lương",
+        "lat": 10.74125, "lng": 106.56841,
+        "type": "EXPRESSWAY_BAN",
+        "speed_limit_moto": 0,
+        "bearing": 230,
+        "address": "Bình Tân / Bình Chánh, TP.HCM",
+        "warning_text": "CẢNH BÁO NGUY HIỂM: Lối vào đường cao tốc Trung Lương - CẤM XE MÁY!"
+    },
+
+    # ================= HÀ NỘI =================
+    {
+        "id": "HN-001",
+        "name": "Ngã tư Xã Đàn - Phạm Ngọc Thạch (Hầm Kim Liên)",
+        "lat": 21.01124, "lng": 105.83652,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 85,
+        "address": "Đống Đa, Hà Nội",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Xã Đàn"
+    },
+    {
+        "id": "HN-002",
+        "name": "Ngã tư Giải Phóng - Kim Đồng",
+        "lat": 20.97852, "lng": 105.84215,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 180,
+        "address": "Hoàng Mai, Hà Nội",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ và sai làn Giải Phóng"
+    },
+    {
+        "id": "HN-003",
+        "name": "Đường Vành đai 3 dưới thấp (Nguyễn Xiển - Khuất Duy Tiến)",
+        "lat": 20.99214, "lng": 105.79954,
+        "type": "LANE",
+        "speed_limit_moto": 50,
+        "bearing": 220,
+        "address": "Thanh Xuân, Hà Nội",
+        "warning_text": "Camera phạt nguội lấn làn và tốc độ 50 km/h Vành Đai 3 dưới thấp"
+    },
+    {
+        "id": "HN-004",
+        "name": "Ngã tư Cầu Giấy - Trần Đăng Ninh",
+        "lat": 21.03452, "lng": 105.79421,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 270,
+        "address": "Cầu Giấy, Hà Nội",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Cầu Giấy"
+    },
+    {
+        "id": "HN-005",
+        "name": "Đường Võ Nguyên Giáp (Hướng đi Sân bay Nội Bài)",
+        "lat": 21.14251, "lng": 105.82145,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 350,
+        "address": "Đông Anh / Sóc Sơn, Hà Nội",
+        "warning_text": "Camera bắn tốc độ đường Võ Nguyên Giáp. Xe máy đi đúng làn và tối đa 60 km/h"
+    },
+    {
+        "id": "HN-006",
+        "name": "Đường Phạm Văn Đồng - Đoạn gần Cầu Thăng Long",
+        "lat": 21.08542, "lng": 105.78214,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 345,
+        "address": "Bắc Từ Liêm, Hà Nội",
+        "warning_text": "Camera bắn tốc độ Phạm Văn Đồng hướng cầu Thăng Long"
+    },
+    {
+        "id": "HN-007",
+        "name": "Ngã tư Lê Văn Lương - Hoàng Đạo Thúy",
+        "lat": 21.00652, "lng": 105.80321,
+        "type": "LANE",
+        "speed_limit_moto": 50,
+        "bearing": 240,
+        "address": "Cầu Giấy / Thanh Xuân, Hà Nội",
+        "warning_text": "Camera phạt nguội lấn làn buýt BRT và vượt đèn đỏ Lê Văn Lương"
+    },
+    {
+        "id": "HN-008",
+        "name": "Quốc lộ 5 cũ - Ngã tư Trâu Quỳ (Gia Lâm)",
+        "lat": 21.00452, "lng": 105.94125,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 105,
+        "address": "Gia Lâm, Hà Nội",
+        "warning_text": "Camera bắn tốc độ Quốc lộ 5 Gia Lâm. Tối đa 50 km/h"
+    },
+    {
+        "id": "HN-EXPRESS-01",
+        "name": "Nút giao Trung Hòa - Lối vào Đại lộ Thăng Long cao tốc",
+        "lat": 21.00412, "lng": 105.78854,
+        "type": "EXPRESSWAY_BAN",
+        "speed_limit_moto": 0,
+        "bearing": 250,
+        "address": "Nam Từ Liêm, Hà Nội",
+        "warning_text": "CẢNH BÁO NGUY HIỂM: Xe máy chỉ đi làn đường gom bên phải, CẤM VÀO LÀN CAO TỐC!"
+    },
+    {
+        "id": "HN-EXPRESS-02",
+        "name": "Nút giao Pháp Vân - Đầu cao tốc Pháp Vân Cầu Giẽ",
+        "lat": 20.96542, "lng": 105.84951,
+        "type": "EXPRESSWAY_BAN",
+        "speed_limit_moto": 0,
+        "bearing": 180,
+        "address": "Hoàng Mai, Hà Nội",
+        "warning_text": "CẢNH BÁO: Lối vào Cao tốc Pháp Vân Cầu Giẽ - CẤM TUYỆT ĐỐI XE MÁY!"
+    },
+
+    # ================= ĐÀ NẴNG =================
+    {
+        "id": "DNA-001",
+        "name": "Ngã tư Điện Biên Phủ - Hà Huy Tập",
+        "lat": 16.06452, "lng": 108.18954,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 115,
+        "address": "Thanh Khê, Đà Nẵng",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Điện Biên Phủ"
+    },
+    {
+        "id": "DNA-002",
+        "name": "Cầu Rồng - Đường Võ Văn Kiệt",
+        "lat": 16.06124, "lng": 108.23145,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 85,
+        "address": "Sơn Trà, Đà Nẵng",
+        "warning_text": "Camera giám sát tốc độ đường Võ Văn Kiệt hướng ra biển Mỹ Khê"
+    },
+    {
+        "id": "DNA-003",
+        "name": "Đường Cách Mạng Tháng 8 - Cầu Đỏ (QL1A)",
+        "lat": 16.01254, "lng": 108.19652,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 200,
+        "address": "Cẩm Lệ, Đà Nẵng",
+        "warning_text": "Camera bắn tốc độ Cách Mạng Tháng Tám đoạn Cầu Đỏ"
+    },
+
+    # ================= BÌNH DƯƠNG & ĐỒNG NAI =================
+    {
+        "id": "BD-001",
+        "name": "Quốc lộ 13 - Ngã tư Cầu Ông Bố (Lái Thiêu)",
+        "lat": 10.89854, "lng": 106.70214,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 15,
+        "address": "Thuận An, Bình Dương",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã tư Cầu Ông Bố QL13"
+    },
+    {
+        "id": "BD-002",
+        "name": "Quốc lộ 13 - Trạm thu phí Suối Giữa (Thủ Dầu Một)",
+        "lat": 10.99854, "lng": 106.64521,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 350,
+        "address": "Thủ Dầu Một, Bình Dương",
+        "warning_text": "Camera bắn tốc độ QL13 Suối Giữa. Xe máy tối đa 60 km/h"
+    },
+    {
+        "id": "DNAI-001",
+        "name": "Ngã tư Vũng Tàu (QL1A giao QL51)",
+        "lat": 10.92452, "lng": 106.85962,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 90,
+        "address": "Biên Hòa, Đồng Nai",
+        "warning_text": "Camera phạt nguội ngã tư Vũng Tàu. Chú ý dừng đúng vạch"
+    },
+    {
+        "id": "DNAI-002",
+        "name": "Quốc lộ 51 - Đoạn ngã ba Thái Lan (Long Thành)",
+        "lat": 10.84512, "lng": 106.94521,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 140,
+        "address": "Long Thành, Đồng Nai",
+        "warning_text": "Camera bắn tốc độ Quốc lộ 51 qua Long Thành. Tối đa 60 km/h"
+    },
+    {
+        "id": "DNAI-003",
+        "name": "Quốc lộ 1A - Dốc Mẹ Bồng Con (Long Khánh)",
+        "lat": 10.91254, "lng": 107.18542,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 70,
+        "address": "Long Khánh, Đồng Nai",
+        "warning_text": "Điểm camera bắn tốc độ QL1A dốc Mẹ Bồng Con"
+    },
+
+    # ================= BÀ RỊA - VŨNG TÀU =================
+    {
+        "id": "BRVT-001",
+        "name": "Quốc lộ 51 - Đoạn qua TX. Phú Mỹ",
+        "lat": 10.58452, "lng": 107.05412,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 160,
+        "address": "TX. Phú Mỹ, Bà Rịa - Vũng Tàu",
+        "warning_text": "Camera bắn tốc độ thông minh QL51 Phú Mỹ. Tối đa 60 km/h"
+    },
+    {
+        "id": "BRVT-002",
+        "name": "Đường 3/2 - Cửa ngõ vào TP. Vũng Tàu",
+        "lat": 10.39214, "lng": 107.12145,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 210,
+        "address": "TP. Vũng Tàu",
+        "warning_text": "Camera bắn tốc độ đường 3 tháng 2 vào TP Vũng Tàu"
+    },
+
+    # ================= QUỐC LỘ 1A & CÁC TỈNH TOÀN QUỐC =================
+    {
+        "id": "QL1A-TH-01",
+        "name": "Quốc lộ 1A - Đoạn qua TP. Thanh Hóa",
+        "lat": 19.80542, "lng": 105.78541,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 180,
+        "address": "TP. Thanh Hóa",
+        "warning_text": "Camera phạt nguội tốc độ và đèn đỏ QL1A Thanh Hóa"
+    },
+    {
+        "id": "QL1A-NA-01",
+        "name": "Quốc lộ 1A - Tuyến tránh TP. Vinh (Nghệ An)",
+        "lat": 18.66542, "lng": 105.65412,
+        "type": "SPEED",
+        "speed_limit_moto": 70,
+        "bearing": 175,
+        "address": "TP. Vinh, Nghệ An",
+        "warning_text": "Camera bắn tốc độ đường tránh Vinh. Xe máy tối đa 70 km/h ngoài đô thị"
+    },
+    {
+        "id": "QL1A-HUE-01",
+        "name": "Quốc lộ 1A - Đoạn qua Phú Lộc (Thừa Thiên Huế)",
+        "lat": 16.26542, "lng": 107.91245,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 140,
+        "address": "Phú Lộc, Thừa Thiên Huế",
+        "warning_text": "Camera giám sát tốc độ QL1A Phú Lộc"
+    },
+    {
+        "id": "QL1A-KH-01",
+        "name": "Quốc lộ 1A - Tuyến tránh Nha Trang (Diên Khánh)",
+        "lat": 12.24512, "lng": 109.09854,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 170,
+        "address": "Diên Khánh, Khánh Hòa",
+        "warning_text": "Camera bắn tốc độ QL1A Diên Khánh Khánh Hòa"
+    },
+    {
+        "id": "QL1A-BT-01",
+        "name": "Quốc lộ 1A - Đoạn qua TP. Phan Thiết (Bình Thuận)",
+        "lat": 10.94125, "lng": 108.08542,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 220,
+        "address": "Phan Thiết, Bình Thuận",
+        "warning_text": "Camera phạt nguội nội thị Phan Thiết. Tối đa 50 km/h"
+    },
+    {
+        "id": "QL1A-TG-01",
+        "name": "Quốc lộ 1A - Ngã ba Trung Lương (Mỹ Tho, Tiền Giang)",
+        "lat": 10.37854, "lng": 106.34512,
+        "type": "RED_LIGHT",
+        "speed_limit_moto": 50,
+        "bearing": 215,
+        "address": "Mỹ Tho, Tiền Giang",
+        "warning_text": "Camera phạt nguội vượt đèn đỏ ngã ba Trung Lương Mỹ Tho"
+    },
+    {
+        "id": "QL1A-CT-01",
+        "name": "Đầu Cầu Cần Thơ (Hướng Cần Thơ đi Vĩnh Long)",
+        "lat": 10.04512, "lng": 105.81452,
+        "type": "SPEED",
+        "speed_limit_moto": 60,
+        "bearing": 30,
+        "address": "Cái Răng, Cần Thơ",
+        "warning_text": "Camera bắn tốc độ qua cầu Cần Thơ. Xe máy tối đa 60 km/h"
+    },
+    {
+        "id": "QL20-LD-01",
+        "name": "Quốc lộ 20 - Đoạn qua Đèo Chuối / Madagui (Lâm Đồng)",
+        "lat": 11.41254, "lng": 107.56854,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 45,
+        "address": "Đạ Huoai, Lâm Đồng",
+        "warning_text": "Camera bắn tốc độ đèo Chuối QL20. Dốc nguy hiểm, giữ tốc độ dưới 50 km/h"
+    },
+    {
+        "id": "QL20-LD-02",
+        "name": "Quốc lộ 20 - Đoạn vào TP. Bảo Lộc",
+        "lat": 11.53452, "lng": 107.81245,
+        "type": "SPEED",
+        "speed_limit_moto": 50,
+        "bearing": 55,
+        "address": "Bảo Lộc, Lâm Đồng",
+        "warning_text": "Camera phạt nguội khu đông dân cư Bảo Lộc. Tối đa 50 km/h"
+    }
+]
+
+SPEED_RULES = {
+    "standard_rules": {
+        "urban": {
+            "dual_carriageway_median": 60,   # Đường đôi có dải phân cách giữa
+            "two_way_single_lane": 50,       # Đường 2 chiều không dải phân cách
+            "description": "Khu vực đông dân cư (Biển R.420): Tối đa 50-60 km/h"
+        },
+        "rural": {
+            "dual_carriageway_median": 70,   # Ngoài đô thị đường đôi (Xe máy TỐI ĐA 70)
+            "two_way_single_lane": 60,       # Ngoài đô thị đường 2 chiều
+            "description": "Ngoài khu đông dân cư (Biển R.421): Xe máy tối đa 60-70 km/h (KHÔNG ĐƯỢC CHẠY 80-90 NHƯ Ô TÔ)"
+        },
+        "moped_electric": {
+            "speed_limit": 40,
+            "description": "Xe gắn máy, xe máy điện dưới 50cc: Tối đa 40 km/h mọi cung đường"
+        }
+    },
+    "warning_thresholds": {
+        "safe_buffer_kmh": 0,                # Dưới tốc độ tối đa -> Màu xanh
+        "caution_buffer_kmh": 3,             # Vượt 1-3 km/h -> Màu vàng cam
+        "danger_buffer_kmh": 5,              # Vượt từ 5 km/h trở lên (ngưỡng bị CSGT phạt tiền) -> Báo động đỏ dồn dập
+        "radar_scan_radius_meters": 1000,    # Quét camera trong bán kính 1km
+        "first_warning_distance_meters": 500,# Cảnh báo lần 1 ở 500m
+        "second_warning_distance_meters": 300# Cảnh báo lần 2 ở 300m
+    }
+}
+
+def export():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(base_dir)
+
+    cameras_path = os.path.join(base_dir, "vietnam_cameras.json")
+    speed_rules_path = os.path.join(base_dir, "vietnam_speed_rules.json")
+
+    with open(cameras_path, "w", encoding="utf-8") as f:
+        json.dump(CAMERAS, f, ensure_ascii=False, indent=2)
+    print(f"[OK] Generated {len(CAMERAS)} national cameras in: {cameras_path}")
+
+    with open(speed_rules_path, "w", encoding="utf-8") as f:
+        json.dump(SPEED_RULES, f, ensure_ascii=False, indent=2)
+    print(f"[OK] Generated speed rules in: {speed_rules_path}")
+
+    # Đồng bộ sang web-hud/data
+    web_cameras = os.path.join(root_dir, "web-hud", "data", "vietnam_cameras.json")
+    web_rules = os.path.join(root_dir, "web-hud", "data", "vietnam_speed_rules.json")
+    with open(web_cameras, "w", encoding="utf-8") as f:
+        json.dump(CAMERAS, f, ensure_ascii=False, indent=2)
+    with open(web_rules, "w", encoding="utf-8") as f:
+        json.dump(SPEED_RULES, f, ensure_ascii=False, indent=2)
+    print(f"[OK] Synced to web-hud/data")
+
+    # Đồng bộ sang android assets
+    android_assets_cameras = os.path.join(root_dir, "android", "app", "src", "main", "assets", "vietnam_cameras.json")
+    android_assets_rules = os.path.join(root_dir, "android", "app", "src", "main", "assets", "vietnam_speed_rules.json")
+    with open(android_assets_cameras, "w", encoding="utf-8") as f:
+        json.dump(CAMERAS, f, ensure_ascii=False, indent=2)
+    with open(android_assets_rules, "w", encoding="utf-8") as f:
+        json.dump(SPEED_RULES, f, ensure_ascii=False, indent=2)
+    print(f"[OK] Synced to android assets")
+
+if __name__ == "__main__":
+    export()

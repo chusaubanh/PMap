@@ -1,0 +1,26 @@
+{
+  "standard_rules": {
+    "urban": {
+      "dual_carriageway_median": 60,
+      "two_way_single_lane": 50,
+      "description": "Khu vực đông dân cư (Biển R.420): Tối đa 50-60 km/h"
+    },
+    "rural": {
+      "dual_carriageway_median": 70,
+      "two_way_single_lane": 60,
+      "description": "Ngoài khu đông dân cư (Biển R.421): Xe máy tối đa 60-70 km/h (KHÔNG ĐƯỢC CHẠY 80-90 NHƯ Ô TÔ)"
+    },
+    "moped_electric": {
+      "speed_limit": 40,
+      "description": "Xe gắn máy, xe máy điện dưới 50cc: Tối đa 40 km/h mọi cung đường"
+    }
+  },
+  "warning_thresholds": {
+    "safe_buffer_kmh": 0,
+    "caution_buffer_kmh": 3,
+    "danger_buffer_kmh": 5,
+    "radar_scan_radius_meters": 1000,
+    "first_warning_distance_meters": 500,
+    "second_warning_distance_meters": 300
+  }
+}

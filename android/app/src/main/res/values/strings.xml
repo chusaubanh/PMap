@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PMap</string>
+    <string name="notification_title">PMap đang giám sát tốc độ xe máy</string>
+    <string name="notification_desc">GPS đang hoạt động để cảnh báo camera phạt nguội và tốc độ</string>
+</resources>

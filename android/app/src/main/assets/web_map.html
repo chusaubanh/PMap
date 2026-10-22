@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PMap Vietnam Map Engine</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #map { width: 100%; height: 100%; background: #070a0f; }
+    .leaflet-container { background: #070a0f !important; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([10.7769, 106.7009], 14);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(map);
+
+    var userMarker = L.marker([10.7769, 106.7009], {
+      icon: L.divIcon({
+        className: 'user-marker',
+        html: '<div style="width:36px;height:36px;border-radius:50%;background:#00ff88;border:3px solid #fff;box-shadow:0 0 15px #00ff88;display:flex;align-items:center;justify-content:center;font-size:18px;">🏍️</div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      })
+    }).addTo(map);
+
+    // Load Cameras
+    fetch('vietnam_cameras.json')
+      .then(r => r.json())
+      .then(cameras => {
+        cameras.forEach(cam => {
+          var color = '#ffb700';
+          var emoji = '📷';
+          if (cam.type === 'RED_LIGHT') { color = '#ff3366'; emoji = '🚦'; }
+          else if (cam.type === 'EXPRESSWAY_BAN') { color = '#ff0033'; emoji = '⛔'; }
+          else if (cam.type === 'LANE') { color = '#00d2ff'; emoji = '🚸'; }
+
+          var camIcon = L.divIcon({
+            className: 'cam-pin',
+            html: '<div style="width:30px;height:30px;border-radius:8px;background:#0d1117;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 8px ' + color + ';">' + emoji + '</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+          });
+
+          L.marker([cam.lat, cam.lng], { icon: camIcon })
+            .bindPopup('<b style="color:#da251d;">' + cam.name + '</b><br/>' + cam.address + '<br/>Giới hạn xe máy: <b>' + cam.speed_limit_moto + ' km/h</b>')
+            .addTo(map);
+        });
+      })
+      .catch(e => console.error(e));
+
+    window.recenterMap = function(lat, lng) {
+      if (userMarker) userMarker.setLatLng([lat, lng]);
+      map.panTo([lat, lng], { animate: true });
+    };
+  </script>
+</body>
+</html>

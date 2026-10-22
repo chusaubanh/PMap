@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_black">#000000</color>
+    <color name="bg_card">#0d1117</color>
+    <color name="neon_green">#00ff88</color>
+    <color name="neon_amber">#ffb700</color>
+    <color name="neon_red">#ff0055</color>
+    <color name="neon_blue">#00d2ff</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_sub">#8b949e</color>
+</resources>

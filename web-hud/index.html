@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MOTO-RADAR VN | Giám Sát Tốc Độ & Camera Phạt Nguội Xe Máy</title>
+  
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="mode-fullscreen">
+
+  <!-- ================= TOP STATUS BAR ================= -->
+  <header class="top-nav">
+    <div class="brand">
+      <span class="brand-badge">VN</span>
+      <span class="brand-title">MOTO-RADAR</span>
+      <span class="mode-tag" id="modeIndicator">BẢN ĐỒ DẪN ĐƯỜNG</span>
+    </div>
+    
+    <div class="top-actions">
+      <button id="btnVoiceToggle" class="icon-btn active" title="Bật/Tắt giọng nói tiếng Việt">
+        <span class="icon">🔊</span>
+      </button>
+      <button id="btnSwitchMode" class="pill-btn primary" title="Chuyển chế độ">
+        <span class="icon">🔄</span> Chế độ Mini HUD
+      </button>
+      <button id="btnQuickMark" class="pill-btn danger" title="Đánh dấu camera ngay lập tức">
+        <span class="icon">📍</span> +Camera
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="main-container">
+    
+    <!-- LEFT: MAP AREA (THAY THẾ GOOGLE MAPS) -->
+    <section class="map-section" id="mapSection">
+      <div id="vietnamMap"></div>
+
+      <!-- Quick Search Bar on Map -->
+      <div class="map-search-overlay">
+        <input type="text" id="mapSearchInput" placeholder="🔍 Tìm đường đi xe máy (né cao tốc)..." />
+        <button id="btnSearchGo" class="search-go-btn">Đi</button>
+      </div>
+
+      <!-- Map Overlap Controls -->
+      <div class="map-controls">
+        <button id="btnRecenterGPS" class="map-float-btn" title="Về vị trí xe của tôi">🎯</button>
+        <button id="btnSimulateRide" class="map-float-btn sim" title="Bật giả lập chạy xe">🎮</button>
+      </div>
+    </section>
+
+    <!-- RIGHT/BOTTOM: HUD COCKPIT PANEL -->
+    <aside class="hud-panel" id="hudPanel">
+      
+      <!-- SPEEDOMETER COCKPIT -->
+      <div class="speed-cockpit" id="speedCockpit">
+        
+        <!-- Motorbike Speed Limit Sign -->
+        <div class="limit-sign-wrapper">
+          <div class="limit-sign" id="limitSign">
+            <span class="limit-sub">XE MÁY</span>
+            <span class="limit-value" id="limitValue">50</span>
+          </div>
+          <span class="zone-label" id="zoneLabel">ĐÔ THỊ</span>
+        </div>
+
+        <!-- Real-Time Speed Display -->
+        <div class="live-speed-wrapper">
+          <div class="speed-number-box">
+            <span class="speed-number" id="liveSpeed">0</span>
+            <span class="speed-unit">km/h</span>
+          </div>
+          <div class="speed-status-bar" id="speedStatusBar">
+            <span class="status-text" id="speedStatusText">GPS SẴN SÀNG</span>
+          </div>
+        </div>
+
+        <!-- Compass & Heading -->
+        <div class="heading-wrapper">
+          <div class="compass-circle">
+            <div class="compass-arrow" id="compassArrow">▲</div>
+          </div>
+          <span class="heading-degrees" id="headingText">0° BẮC</span>
+        </div>
+
+      </div>
+
+      <!-- RADAR WARNING BANNER -->
+      <div class="radar-card" id="radarCard">
+        <div class="radar-header">
+          <span class="radar-pulse"></span>
+          <span class="radar-title">RADAR CAMERA PHẠT NGUỘI</span>
+          <span class="radar-count" id="cameraCount">45 Camera</span>
+        </div>
+
+        <div class="radar-body" id="radarBody">
+          <div class="camera-alert-box" id="cameraAlertBox">
+            <div class="cam-icon-box" id="camIconBox">📷</div>
+            <div class="cam-info">
+              <h4 class="cam-name" id="camName">Đang quét camera trên lộ trình...</h4>
+              <p class="cam-desc" id="camDesc">Hệ thống sẵn sàng cảnh báo trước 500m</p>
+            </div>
+            <div class="cam-distance-box">
+              <span class="cam-dist" id="camDistance">--</span>
+              <span class="cam-dist-unit">mét</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK SIMULATOR DRAWER (EM YÊU KHOA HỌC) -->
+      <div class="sim-drawer" id="simDrawer">
+        <div class="sim-header">
+          <span>🧪 GIẢ LẬP LÁI XE & TEST CẢNH BÁO</span>
+          <button id="btnCloseSim" class="close-sim-btn">✕</button>
+        </div>
+        <div class="sim-presets">
+          <button class="sim-btn" onclick="startSimulation('hcm_speeding')">
+            🚨 TP.HCM Võ Văn Kiệt (Vượt tốc độ 58/50)
+          </button>
+          <button class="sim-btn" onclick="startSimulation('hn_redlight')">
+            🚦 Hà Nội Xã Đàn (Tiếp cận Camera Vượt Đèn Đỏ)
+          </button>
+          <button class="sim-btn danger" onclick="startSimulation('expressway_warning')">
+            ⛔ Cảnh báo lạc vào Đường Cao Tốc (Cấm xe máy)
+          </button>
+          <button class="sim-btn stop" onclick="stopSimulation()">
+            ⏹️ Dừng giả lập (Dùng GPS thực)
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- ================= FLOATING MINI HUD (CHẾ ĐỘ 2 ĐÈ GOOGLE MAPS) ================= -->
+  <div class="floating-hud-overlay" id="floatingHud" style="display: none;">
+    <div class="floating-pill" id="floatingPill">
+      <div class="pill-drag-handle">⋮⋮</div>
+      
+      <!-- Live Speed -->
+      <div class="pill-speed-box">
+        <span class="pill-speed-num" id="pillLiveSpeed">0</span>
+        <span class="pill-unit">km/h</span>
+      </div>
+
+      <!-- Limit Badge -->
+      <div class="pill-limit-badge" id="pillLimitBadge">50</div>
+
+      <!-- Camera Alert Mini -->
+      <div class="pill-cam-box">
+        <span class="pill-cam-icon" id="pillCamIcon">📷</span>
+        <span class="pill-cam-dist" id="pillCamDist">--m</span>
+      </div>
+
+      <button class="pill-close-btn" id="btnBackToFull" title="Mở lại toàn màn hình">⛶</button>
+    </div>
+  </div>
+
+  <!-- Audio element for warning beeps -->
+  <audio id="beepAudio" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU..." type="audio/wav">
+  </audio>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
