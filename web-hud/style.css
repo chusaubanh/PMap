@@ -165,9 +165,13 @@ html, body {
   background: #0a0e14;
 }
 
-/* Dark mode map tiles overrides */
+/* Dark mode map tiles overrides - 100% Không cần API key */
 .leaflet-container {
   background: #070a0f !important;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(2.6) hue-rotate(200deg) saturate(0.35) brightness(0.7);
 }
 
 /* Search bar on map */

@@ -58,10 +58,10 @@ function initMap() {
   // Thêm điều khiển Zoom ở góc phải
   L.control.zoom({ position: 'topright' }).addTo(state.map);
 
-  // Lớp bản đồ nền Dark Matter ban đêm thể thao
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // Bản đồ OpenStreetMap chính thống - 100% Miễn phí, Không cần bất kỳ API key nào!
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd'
+    attribution: '© OpenStreetMap'
   }).addTo(state.map);
 
   state.cameraLayerGroup = L.layerGroup().addTo(state.map);
@@ -87,6 +87,13 @@ function initMap() {
 
 // ================= 2. LOAD CAMERA DATASET =================
 async function loadCameras() {
+  if (window.VIETNAM_CAMERAS && window.VIETNAM_CAMERAS.length > 0) {
+    state.cameras = window.VIETNAM_CAMERAS;
+    cameraCountEl.textContent = `${state.cameras.length} Camera`;
+    renderCamerasOnMap();
+    return;
+  }
+
   try {
     const res = await fetch('data/vietnam_cameras.json');
     state.cameras = await res.json();
